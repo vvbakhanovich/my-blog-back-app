@@ -16,7 +16,7 @@ public class JdbcTagRepository implements TagRepository {
     public void saveAll(long postId, List<String> tags) {
         jdbcTemplate.batchUpdate(
                 "INSERT INTO post_tags(post_id, tag) VALUES(?, ?)",
-                tags.stream().map(tag -> new Object[]{postId, tag}).toList()
+                tags.stream().distinct().map(tag -> new Object[]{postId, tag}).toList()
         );
     }
 
