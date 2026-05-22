@@ -1,0 +1,17 @@
+CREATE TABLE IF NOT EXISTS posts(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(256) NOT NULL,
+    content TEXT NOT NULL,
+    likes_count BIGINT DEFAULT 0,
+    CONSTRAINT check_likes_non_negative CHECK (likes_count >= 0));
+
+CREATE TABLE IF NOT EXISTS post_comments(
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    content VARCHAR(256) NOT NULL,
+    post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_tags (
+    post_id BIGINT REFERENCES posts(id) ON DELETE CASCADE,
+    tag     VARCHAR(64) NOT NULL
+    );
