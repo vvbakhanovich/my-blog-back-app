@@ -1,5 +1,6 @@
 package dev.vvbakh.posts.service;
 
+import dev.vvbakh.exception.NotFoundException;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.mapper.PostMapper;
@@ -34,7 +35,8 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostDto getById(long postId) {
         log.debug("Получение поста с id '{}'", postId);
-        Post post = postRepository.getById(postId);
+        Post post = postRepository.getById(postId)
+                .orElseThrow(() -> new NotFoundException("Пост с id '" + postId + "' не найден"));
         List<String> tags = tagRepository.getAllByPostId(postId);
         return postMapper.toDto(post, tags);
     }
