@@ -9,6 +9,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Statement;
+import java.util.Optional;
 
 @Repository
 @Slf4j
@@ -35,8 +36,8 @@ public class JdbcPostRepository implements PostRepository {
     }
 
     @Override
-    public Post getById(long id) {
-        return jdbcTemplate.queryForObject(
+    public Optional<Post> getById(long id) {
+        return jdbcTemplate.query(
                 "SELECT id, title, content, likes_count FROM posts WHERE id = ?",
                 (rs, rn) -> new Post(
                         rs.getLong("id"),
@@ -45,6 +46,6 @@ public class JdbcPostRepository implements PostRepository {
                         rs.getLong("likes_count")
                 ),
                 id
-        );
+        ).stream().findFirst();
     }
 }
