@@ -1,7 +1,9 @@
 package dev.vvbakh.posts.service;
 
-import dev.vvbakh.posts.model.Post;
+import dev.vvbakh.posts.dto.CreatePostDto;
+import dev.vvbakh.posts.dto.PostDto;
 
 public interface PostService {
-    Post create(Post newPost);
+    PostDto create(CreatePostDto dto);
+    PostDto getById(long postId);
 }
