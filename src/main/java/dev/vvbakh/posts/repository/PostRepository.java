@@ -4,4 +4,6 @@ import dev.vvbakh.posts.model.Post;
 
 public interface PostRepository {
     long create(Post newPost);
+
+    Post getById(long postId);
 }

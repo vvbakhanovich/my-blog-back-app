@@ -33,4 +33,18 @@ public class JdbcPostRepository implements PostRepository {
 
         return keyHolder.getKey().longValue();
     }
+
+    @Override
+    public Post getById(long id) {
+        return jdbcTemplate.queryForObject(
+                "SELECT id, title, content, likes_count FROM posts WHERE id = ?",
+                (rs, rn) -> new Post(
+                        rs.getLong("id"),
+                        rs.getString("title"),
+                        rs.getString("content"),
+                        rs.getLong("likes_count")
+                ),
+                id
+        );
+    }
 }
