@@ -18,5 +18,7 @@ public interface PostMapper {
     PostDto toDto(Post post, List<String> tags);
 
     @Mapping(source = "text", target = "content")
-    Post toModel(CreatePostDto dto); // id → null (Long), likesCount → 0 (long) — MapStruct по умолчанию
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "likesCount", ignore = true)
+    Post toModel(CreatePostDto dto);
 }
