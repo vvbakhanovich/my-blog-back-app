@@ -75,6 +75,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
+    public long incrementLikes(long postId) {
+        log.info("Инкремент лайков поста с идентификатором '{}'.", postId);
+        getPostOrThrow(postId);
+        return postRepository.incrementLikes(postId);
+    }
+
+    @Override
+    @Transactional
     public void deletePost(long postId) {
         log.info("Удаление поста с идентификатором '{}'.", postId);
         getPostOrThrow(postId);

@@ -15,4 +15,6 @@ public interface PostService {
     PostsPageDto getAll(String search, int pageNumber, int pageSize);
 
     void deletePost(long postId);
+
+    long incrementLikes(long postId);
 }
