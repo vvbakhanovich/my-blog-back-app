@@ -1,7 +1,7 @@
 package dev.vvbakh.posts.service;
 
+import dev.vvbakh.comments.repository.CommentsRepository;
 import dev.vvbakh.exception.NotFoundException;
-import dev.vvbakh.files.FileService;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.PostsPageDto;
@@ -16,16 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,9 +34,9 @@ class PostServiceImplTest {
     @Mock
     private TagRepository tagRepository;
     @Mock
-    private PostMapper postMapper;
+    private CommentsRepository commentsRepository;
     @Mock
-    private FileService fileService;
+    private PostMapper postMapper;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -58,7 +54,8 @@ class PostServiceImplTest {
         when(postRepository.create(mappedPost)).thenReturn(1L);
         when(postRepository.getById(1L)).thenReturn(Optional.of(savedPost));
         when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
-        when(postMapper.toDto(savedPost, tags)).thenReturn(expectedDto);
+        when(commentsRepository.countByPostId(1L)).thenReturn(0L);
+        when(postMapper.toDto(savedPost, tags, 0L)).thenReturn(expectedDto);
 
         PostDto result = postService.create(dto);
 
@@ -72,17 +69,19 @@ class PostServiceImplTest {
     void getById_shouldReturnPostDtoWithTags() {
         Post post = new Post(1L, "Title", "Content", 5L);
         List<String> tags = List.of("java");
-        PostDto expectedDto = new PostDto(1L, "Title", "Content", tags, 5L, 0);
+        PostDto expectedDto = new PostDto(1L, "Title", "Content", tags, 5L, 2);
 
         when(postRepository.getById(1L)).thenReturn(Optional.of(post));
         when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
-        when(postMapper.toDto(post, tags)).thenReturn(expectedDto);
+        when(commentsRepository.countByPostId(1L)).thenReturn(2L);
+        when(postMapper.toDto(post, tags, 2L)).thenReturn(expectedDto);
 
         PostDto result = postService.getById(1L);
 
         assertEquals(expectedDto, result);
         verify(postRepository).getById(1L);
         verify(tagRepository).getAllByPostId(1L);
+        verify(commentsRepository).countByPostId(1L);
     }
 
     @Test
@@ -104,7 +103,8 @@ class PostServiceImplTest {
         when(postRepository.getById(1L)).thenReturn(Optional.of(post));
         when(postMapper.toModel(dto)).thenReturn(post);
         when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
-        when(postMapper.toDto(post, tags)).thenReturn(expectedDto);
+        when(commentsRepository.countByPostId(1L)).thenReturn(0L);
+        when(postMapper.toDto(post, tags, 0L)).thenReturn(expectedDto);
 
         PostDto result = postService.updatePost(1L, dto);
 
@@ -172,7 +172,8 @@ class PostServiceImplTest {
         when(postRepository.getAll("java", 1, 2)).thenReturn(List.of(post));
         when(postRepository.countAll("java")).thenReturn(3L);
         when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
-        when(postMapper.toDto(post, tags)).thenReturn(postDto);
+        when(commentsRepository.countByPostId(1L)).thenReturn(0L);
+        when(postMapper.toDto(post, tags, 0L)).thenReturn(postDto);
 
         PostsPageDto result = postService.getAll("java", 1, 2);
 
@@ -180,52 +181,6 @@ class PostServiceImplTest {
         assertEquals(false, result.hasPrev());
         assertEquals(true, result.hasNext());
         assertEquals(2L, result.lastPage());
-    }
-
-    @Test
-    @DisplayName("сохранять картинку поста через FileService")
-    void uploadImage_shouldCallFileServiceSaveImage() throws IOException {
-        Post post = new Post(1L, "Title", "Content", 0);
-        byte[] data = "img".getBytes();
-        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
-
-        postService.uploadImage(1L, mockMultipartFile(data));
-
-        verify(fileService).saveImage(1L, data);
-    }
-
-    @Test
-    @DisplayName("бросать NotFoundException при загрузке картинки несуществующего поста")
-    void uploadImage_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
-        when(postRepository.getById(999L)).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class,
-                () -> postService.uploadImage(999L, mock(MultipartFile.class)));
-    }
-
-    @Test
-    @DisplayName("возвращать байты картинки поста через FileService")
-    void getImage_shouldReturnBytesFromFileService() throws IOException {
-        Post post = new Post(1L, "Title", "Content", 0);
-        byte[] data = "img".getBytes();
-        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
-        when(fileService.getImage(1L)).thenReturn(data);
-
-        assertArrayEquals(data, postService.getImage(1L));
-    }
-
-    @Test
-    @DisplayName("бросать NotFoundException при получении картинки несуществующего поста")
-    void getImage_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
-        when(postRepository.getById(999L)).thenReturn(Optional.empty());
-
-        assertThrows(NotFoundException.class, () -> postService.getImage(999L));
-    }
-
-    private MultipartFile mockMultipartFile(byte[] data) throws IOException {
-        MultipartFile file = mock(MultipartFile.class);
-        when(file.getBytes()).thenReturn(data);
-        return file;
     }
 
     @Test
@@ -238,7 +193,8 @@ class PostServiceImplTest {
         when(postRepository.getAll("Post", 1, 10)).thenReturn(List.of(post));
         when(postRepository.countAll("Post")).thenReturn(1L);
         when(tagRepository.getAllByPostId(1L)).thenReturn(List.of());
-        when(postMapper.toDto(post, List.of())).thenReturn(postDto);
+        when(commentsRepository.countByPostId(1L)).thenReturn(0L);
+        when(postMapper.toDto(post, List.of(), 0L)).thenReturn(postDto);
 
         PostsPageDto result = postService.getAll("Post", 1, 10);
 

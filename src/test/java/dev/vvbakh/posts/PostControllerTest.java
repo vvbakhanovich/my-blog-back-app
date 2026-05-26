@@ -339,4 +339,137 @@ class  PostControllerTest {
         mockMvc.perform(get("/api/posts/{id}/image", Long.MAX_VALUE))
                 .andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("добавлять комментарий к посту и возвращать DTO")
+    void addComment_shouldReturnCommentDto() throws Exception {
+        long postId = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"Nice post!"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").isNumber())
+                .andExpect(jsonPath("$.text").value("Nice post!"))
+                .andExpect(jsonPath("$.postId").value(postId));
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при добавлении комментария с пустым text")
+    void addComment_shouldReturn400WhenTextIsBlank() throws Exception {
+        long postId = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":""}
+                                """))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при добавлении комментария к несуществующему посту")
+    void addComment_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/comments", Long.MAX_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"Hello"}
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("возвращать список комментариев поста")
+    void getComments_shouldReturnCommentList() throws Exception {
+        long postId = postRepository.create(new Post(null, "Title", "Content", 0));
+        tagRepository.saveAll(postId, List.of());
+
+        mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"text":"First"}
+                        """));
+        mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"text":"Second"}
+                        """));
+
+        mockMvc.perform(get("/api/posts/{id}/comments", postId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при запросе комментариев несуществующего поста")
+    void getComments_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/comments", Long.MAX_VALUE))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("обновлять комментарий и возвращать обновлённый DTO")
+    void updateComment_shouldReturnUpdatedDto() throws Exception {
+        long postId = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        String response = mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"Old"}
+                                """))
+                .andReturn().getResponse().getContentAsString();
+
+        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                .readTree(response).get("id").asLong();
+
+        mockMvc.perform(put("/api/posts/{postId}/comments/{commentId}", postId, commentId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"New"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.text").value("New"));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при обновлении комментария несуществующего поста")
+    void updateComment_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(put("/api/posts/{postId}/comments/{commentId}", Long.MAX_VALUE, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"Text"}
+                                """))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("удалять комментарий и возвращать 200")
+    void deleteComment_shouldReturn200() throws Exception {
+        long postId = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        String response = mockMvc.perform(post("/api/posts/{id}/comments", postId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"text":"To delete"}
+                                """))
+                .andReturn().getResponse().getContentAsString();
+
+        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+                .readTree(response).get("id").asLong();
+
+        mockMvc.perform(delete("/api/posts/{postId}/comments/{commentId}", postId, commentId))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/posts/{id}/comments", postId))
+                .andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при удалении комментария несуществующего поста")
+    void deleteComment_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(delete("/api/posts/{postId}/comments/{commentId}", Long.MAX_VALUE, 1L))
+                .andExpect(status().isNotFound());
+    }
 }
