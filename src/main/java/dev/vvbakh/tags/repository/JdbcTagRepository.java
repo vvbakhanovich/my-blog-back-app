@@ -1,6 +1,5 @@
 package dev.vvbakh.tags.repository;
 
-import dev.vvbakh.posts.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
