@@ -108,6 +108,25 @@ class PostServiceImplTest {
     }
 
     @Test
+    @DisplayName("удалять пост по идентификатору")
+    void deletePost_shouldCallRepositoryDelete() {
+        Post post = new Post(1L, "Title", "Content", 0);
+        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
+
+        postService.deletePost(1L);
+
+        verify(postRepository).delete(1L);
+    }
+
+    @Test
+    @DisplayName("бросать NotFoundException при удалении несуществующего поста")
+    void deletePost_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+        when(postRepository.getById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> postService.deletePost(999L));
+    }
+
+    @Test
     @DisplayName("бросать NotFoundException при обновлении несуществующего поста")
     void updatePost_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
         when(postRepository.getById(999L)).thenReturn(Optional.empty());
