@@ -17,4 +17,6 @@ public interface PostRepository {
     long countAll(String search);
 
     void delete(long postId);
+
+    long incrementLikes(long postId);
 }

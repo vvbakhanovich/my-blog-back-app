@@ -82,4 +82,10 @@ public class JdbcPostRepository implements PostRepository {
     public void delete(long postId) {
         jdbcTemplate.update("DELETE FROM posts WHERE id = ?", postId);
     }
+
+    @Override
+    public long incrementLikes(long postId) {
+        jdbcTemplate.update("UPDATE posts SET likes_count = likes_count + 1 WHERE id = ?", postId);
+        return jdbcTemplate.queryForObject("SELECT likes_count FROM posts WHERE id = ?", Long.class, postId);
+    }
 }
