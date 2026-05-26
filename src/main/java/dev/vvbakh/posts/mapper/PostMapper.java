@@ -15,8 +15,8 @@ public interface PostMapper {
 
     @Mapping(source = "post.content", target = "text")
     @Mapping(source = "tags", target = "tags")
-    @Mapping(target = "commentsCount", constant = "0L") // TODO: заменить на реальный счётчик после реализации комментариев
-    PostDto toDto(Post post, List<String> tags);
+    @Mapping(source = "commentsCount", target = "commentsCount")
+    PostDto toDto(Post post, List<String> tags, long commentsCount);
 
     @Mapping(source = "text", target = "content")
     @Mapping(target = "id", ignore = true)

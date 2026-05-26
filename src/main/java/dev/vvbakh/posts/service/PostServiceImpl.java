@@ -1,8 +1,7 @@
 package dev.vvbakh.posts.service;
 
+import dev.vvbakh.comments.repository.CommentsRepository;
 import dev.vvbakh.exception.NotFoundException;
-import dev.vvbakh.exception.UploadFileException;
-import dev.vvbakh.files.FileService;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.PostsPageDto;
@@ -15,9 +14,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 
 @Service
@@ -27,8 +24,8 @@ public class PostServiceImpl implements PostService {
 
     private final PostRepository postRepository;
     private final TagRepository tagRepository;
+    private final CommentsRepository commentsRepository;
     private final PostMapper postMapper;
-    private final FileService fileService;
 
     @Override
     @Transactional
@@ -44,7 +41,8 @@ public class PostServiceImpl implements PostService {
         log.debug("Получение поста с id '{}'", postId);
         final var post = getPostOrThrow(postId);
         final List<String> tags = tagRepository.getAllByPostId(postId);
-        return postMapper.toDto(post, tags);
+        final long commentsCount = commentsRepository.countByPostId(postId);
+        return postMapper.toDto(post, tags, commentsCount);
     }
 
     @Override
@@ -66,7 +64,8 @@ public class PostServiceImpl implements PostService {
         long lastPage = (total == 0 || pageSize == 0) ? 1 : (long) Math.ceil((double) total / pageSize);
 
         List<PostDto> dtos = posts.stream()
-                .map(post -> truncateText(postMapper.toDto(post, tagRepository.getAllByPostId(post.id()))))
+                .map(post -> truncateText(postMapper.toDto(post, tagRepository.getAllByPostId(post.id()),
+                        commentsRepository.countByPostId(post.id()))))
                 .toList();
 
         return new PostsPageDto(dtos, pageNumber > 1, pageNumber < lastPage, lastPage);
@@ -84,27 +83,6 @@ public class PostServiceImpl implements PostService {
         log.info("Инкремент лайков поста с идентификатором '{}'.", postId);
         getPostOrThrow(postId);
         return postRepository.incrementLikes(postId);
-    }
-
-    @Override
-    public void uploadImage(long postId, MultipartFile image) {
-        log.info("Обновление картинки поста с идентификатором '{}'.", postId);
-        getPostOrThrow(postId);
-        try {
-            fileService.saveImage(postId, image.getBytes());
-        } catch (IOException e) {
-            throw new UploadFileException(e);
-        }
-    }
-
-    @Override
-    public byte[] getImage(long postId) {
-        getPostOrThrow(postId);
-        try {
-            return fileService.getImage(postId);
-        } catch (IOException e) {
-            throw new UploadFileException(e);
-        }
     }
 
     @Override

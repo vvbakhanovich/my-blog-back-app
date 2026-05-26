@@ -4,7 +4,6 @@ import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.PostsPageDto;
 import dev.vvbakh.posts.dto.UpdatePostDto;
-import org.springframework.web.multipart.MultipartFile;
 
 public interface PostService {
     PostDto create(CreatePostDto dto);
@@ -18,8 +17,4 @@ public interface PostService {
     void deletePost(long postId);
 
     long incrementLikes(long postId);
-
-    void uploadImage(long postId, MultipartFile image);
-
-    byte[] getImage(long postId);
 }
