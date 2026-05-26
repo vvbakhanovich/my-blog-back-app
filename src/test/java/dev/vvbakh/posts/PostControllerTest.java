@@ -52,6 +52,94 @@ class  PostControllerTest {
     }
 
     @Test
+    @DisplayName("возвращать страницу постов по запросу GET /api/posts")
+    void getAllPosts_shouldReturnPostsPage() throws Exception {
+        long id = postRepository.create(new Post(null, "Spring Tutorial", "Learn Spring", 0));
+        tagRepository.saveAll(id, List.of("spring"));
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "Spring")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts").isArray())
+                .andExpect(jsonPath("$.posts[0].id").value(id))
+                .andExpect(jsonPath("$.posts[0].title").value("Spring Tutorial"))
+                .andExpect(jsonPath("$.hasPrev").value(false))
+                .andExpect(jsonPath("$.lastPage").isNumber());
+    }
+
+    @Test
+    @DisplayName("возвращать все посты при пустой строке поиска")
+    void getAllPosts_shouldReturnAllPostsWhenSearchIsEmpty() throws Exception {
+        postRepository.create(new Post(null, "Java Post", "Java content", 0));
+        postRepository.create(new Post(null, "Spring Post", "Spring content", 0));
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts.length()").value(2));
+    }
+
+    @Test
+    @DisplayName("фильтровать посты по поисковой строке")
+    void getAllPosts_shouldFilterBySearch() throws Exception {
+        postRepository.create(new Post(null, "Java Post", "Content about Java", 0));
+        postRepository.create(new Post(null, "Spring Post", "Content about Spring", 0));
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "Java")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts.length()").value(1))
+                .andExpect(jsonPath("$.posts[0].title").value("Java Post"));
+    }
+
+    @Test
+    @DisplayName("обрезать текст поста до 128 символов в списке")
+    void getAllPosts_shouldTruncateTextTo128Chars() throws Exception {
+        String longContent = "A".repeat(200);
+        postRepository.create(new Post(null, "Long Post", longContent, 0));
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "Long")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.posts[0].text").value("A".repeat(128) + "…"));
+    }
+
+    @Test
+    @DisplayName("возвращать hasPrev=false и hasNext=true на первой странице из нескольких")
+    void getAllPosts_shouldReturnCorrectPaginationFlags() throws Exception {
+        for (int i = 1; i <= 3; i++) {
+            postRepository.create(new Post(null, "Post " + i, "Content " + i, 0));
+        }
+
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "Post")
+                        .param("pageNumber", "1")
+                        .param("pageSize", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.hasPrev").value(false))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.lastPage").value(2));
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при pageNumber меньше 1")
+    void getAllPosts_shouldReturn400WhenPageNumberIsInvalid() throws Exception {
+        mockMvc.perform(get("/api/posts")
+                        .param("search", "")
+                        .param("pageNumber", "0")
+                        .param("pageSize", "10"))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("создавать пост и возвращать DTO по запросу POST /api/posts")
     void createPost_shouldReturnCreatedPostDto() throws Exception {
         mockMvc.perform(post("/api/posts")
