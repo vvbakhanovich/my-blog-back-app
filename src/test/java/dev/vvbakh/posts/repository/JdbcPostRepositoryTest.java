@@ -133,4 +133,14 @@ class JdbcPostRepositoryTest {
 
         assertEquals(1, count);
     }
+
+    @Test
+    @DisplayName("удалять пост по идентификатору")
+    void delete_shouldRemovePost() {
+        long id = postRepository.create(new Post(null, "To Delete", "Content", 0));
+
+        postRepository.delete(id);
+
+        assertTrue(postRepository.getById(id).isEmpty());
+    }
 }
