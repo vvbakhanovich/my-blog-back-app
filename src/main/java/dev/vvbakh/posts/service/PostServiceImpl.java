@@ -28,7 +28,7 @@ public class PostServiceImpl implements PostService {
     @Override
     @Transactional
     public PostDto create(CreatePostDto dto) {
-        log.debug("Добавление поста с заголовком '{}'", dto.title());
+        log.info("Добавление поста с заголовком '{}'", dto.title());
         long postId = postRepository.create(postMapper.toModel(dto));
         tagRepository.saveAll(postId, dto.tags());
         return getById(postId);
@@ -71,6 +71,14 @@ public class PostServiceImpl implements PostService {
         if (dto.text().length() <= 128) return dto;
         return new PostDto(dto.id(), dto.title(), dto.text().substring(0, 128) + "…",
                 dto.tags(), dto.likesCount(), dto.commentsCount());
+    }
+
+    @Override
+    @Transactional
+    public void deletePost(long postId) {
+        log.info("Удаление поста с идентификатором '{}'.", postId);
+        getPostOrThrow(postId);
+        postRepository.delete(postId);
     }
 
     private Post getPostOrThrow(long postId) {

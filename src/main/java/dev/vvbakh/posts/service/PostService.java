@@ -13,4 +13,6 @@ public interface PostService {
     PostDto updatePost(long postId, UpdatePostDto updatedPost);
 
     PostsPageDto getAll(String search, int pageNumber, int pageSize);
+
+    void deletePost(long postId);
 }
