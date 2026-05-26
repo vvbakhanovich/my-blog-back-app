@@ -47,4 +47,16 @@ class JdbcPostRepositoryTest {
         assertEquals("Test Content", found.content());
         assertEquals(0L, found.likesCount());
     }
+
+    @Test
+    @DisplayName("обновлять данные поста")
+    void update_shouldUpdatePost() {
+        long id = postRepository.create(new Post(null, "Old Title", "Old Content", 0));
+
+        postRepository.update(new Post(id, "New Title", "New Content", 0));
+
+        Post found = postRepository.getById(id).orElseThrow();
+        assertEquals("New Title", found.title());
+        assertEquals("New Content", found.content());
+    }
 }
