@@ -1,5 +1,7 @@
 package dev.vvbakh.posts.service;
 
+import dev.vvbakh.exception.NotFoundException;
+import dev.vvbakh.files.FileService;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.PostsPageDto;
@@ -14,14 +16,16 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.multipart.MultipartFile;
 
-import dev.vvbakh.exception.NotFoundException;
-
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +39,8 @@ class PostServiceImplTest {
     private TagRepository tagRepository;
     @Mock
     private PostMapper postMapper;
+    @Mock
+    private FileService fileService;
 
     @InjectMocks
     private PostServiceImpl postService;
@@ -174,6 +180,52 @@ class PostServiceImplTest {
         assertEquals(false, result.hasPrev());
         assertEquals(true, result.hasNext());
         assertEquals(2L, result.lastPage());
+    }
+
+    @Test
+    @DisplayName("сохранять картинку поста через FileService")
+    void uploadImage_shouldCallFileServiceSaveImage() throws IOException {
+        Post post = new Post(1L, "Title", "Content", 0);
+        byte[] data = "img".getBytes();
+        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
+
+        postService.uploadImage(1L, mockMultipartFile(data));
+
+        verify(fileService).saveImage(1L, data);
+    }
+
+    @Test
+    @DisplayName("бросать NotFoundException при загрузке картинки несуществующего поста")
+    void uploadImage_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+        when(postRepository.getById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class,
+                () -> postService.uploadImage(999L, mock(MultipartFile.class)));
+    }
+
+    @Test
+    @DisplayName("возвращать байты картинки поста через FileService")
+    void getImage_shouldReturnBytesFromFileService() throws IOException {
+        Post post = new Post(1L, "Title", "Content", 0);
+        byte[] data = "img".getBytes();
+        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
+        when(fileService.getImage(1L)).thenReturn(data);
+
+        assertArrayEquals(data, postService.getImage(1L));
+    }
+
+    @Test
+    @DisplayName("бросать NotFoundException при получении картинки несуществующего поста")
+    void getImage_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+        when(postRepository.getById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> postService.getImage(999L));
+    }
+
+    private MultipartFile mockMultipartFile(byte[] data) throws IOException {
+        MultipartFile file = mock(MultipartFile.class);
+        when(file.getBytes()).thenReturn(data);
+        return file;
     }
 
     @Test

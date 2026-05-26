@@ -21,10 +21,15 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
+import org.springframework.http.HttpMethod;
+import org.springframework.mock.web.MockMultipartFile;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -289,5 +294,49 @@ class  PostControllerTest {
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    @DisplayName("загружать картинку поста и возвращать 200")
+    void uploadImage_shouldReturn200() throws Exception {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+        MockMultipartFile image = new MockMultipartFile("image", "img.jpg",
+                MediaType.IMAGE_JPEG_VALUE, "fake-image".getBytes());
+
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/posts/{id}/image", id)
+                        .file(image))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("возвращать байты картинки по запросу GET /api/posts/{id}/image")
+    void getImage_shouldReturnBytes() throws Exception {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+        MockMultipartFile image = new MockMultipartFile("image", "img.jpg",
+                MediaType.IMAGE_JPEG_VALUE, "fake-image".getBytes());
+
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/posts/{id}/image", id).file(image));
+
+        mockMvc.perform(get("/api/posts/{id}/image", id))
+                .andExpect(status().isOk())
+                .andExpect(content().bytes("fake-image".getBytes()));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при загрузке картинки несуществующего поста")
+    void uploadImage_shouldReturn404WhenPostNotFound() throws Exception {
+        MockMultipartFile image = new MockMultipartFile("image", "img.jpg",
+                MediaType.IMAGE_JPEG_VALUE, "fake-image".getBytes());
+
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/posts/{id}/image", Long.MAX_VALUE)
+                        .file(image))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при получении картинки несуществующего поста")
+    void getImage_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(get("/api/posts/{id}/image", Long.MAX_VALUE))
+                .andExpect(status().isNotFound());
     }
 }

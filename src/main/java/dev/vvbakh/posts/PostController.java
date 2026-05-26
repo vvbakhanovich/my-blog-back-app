@@ -9,6 +9,7 @@ import dev.vvbakh.posts.service.PostService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("api/posts")
@@ -60,6 +62,18 @@ public class PostController {
     public void deletePost(@PathVariable long postId) {
         postService.deletePost(postId);
     }
+
+    @PutMapping("/{postId}/image")
+    public void uploadImage(@PathVariable long postId,
+                            @RequestParam("image") MultipartFile image) {
+        postService.uploadImage(postId, image);
+    }
+
+    @GetMapping(value = "/{postId}/image", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    public byte[] getImage(@PathVariable long postId) {
+        return postService.getImage(postId);
+    }
+
 
     private void validateMatchingIds(long postId, UpdatePostDto updatedPost) {
         if (postId != updatedPost.id()) {

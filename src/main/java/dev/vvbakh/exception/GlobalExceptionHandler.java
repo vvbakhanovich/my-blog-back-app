@@ -13,32 +13,38 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static org.springframework.http.HttpStatus.*;
+
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(NotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
+    @ResponseStatus(NOT_FOUND)
     public ErrorMessage handleNotFoundException(NotFoundException e) {
-        return new ErrorMessage(Map.of("error", e.getMessage()), HttpStatus.NOT_FOUND.value());
+        log.info("Объект не найден", e);
+        return new ErrorMessage(Map.of("error", e.getMessage()), NOT_FOUND.value());
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(BAD_REQUEST)
     public ErrorMessage handleDataAccessException(DataIntegrityViolationException e) {
-        return new ErrorMessage(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST.value());
+        log.error("Ошибка при обращении к базе данных", e);
+        return new ErrorMessage(Map.of("error", e.getMessage()), BAD_REQUEST.value());
     }
 
     @ExceptionHandler(IdNotMatchException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(BAD_REQUEST)
     public ErrorMessage handleIdNotMatchException(IdNotMatchException e) {
+        log.error("Несоответствие идентификаторов при обновлении", e);
         return new ErrorMessage(Map.of("error", "Ids don't match. Path variable '" + e.getPathVariableId() +
-                "' . Post id from request body '" + e.getPostId() + "'."), HttpStatus.BAD_REQUEST.value());
+                "' . Post id from request body '" + e.getPostId() + "'."), BAD_REQUEST.value());
     }
 
     @ExceptionHandler(ConstraintViolationException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(BAD_REQUEST)
     public ErrorMessage handleConstraintViolationException(ConstraintViolationException e) {
+        log.error("Нарушение ограничений", e);
         Map<String, String> errors = e.getConstraintViolations().stream()
                 .collect(Collectors.toMap(
                         v -> {
@@ -48,21 +54,29 @@ public class GlobalExceptionHandler {
                         v -> v.getMessage(),
                         (a, b) -> a
                 ));
-        return new ErrorMessage(errors, HttpStatus.BAD_REQUEST.value());
+        return new ErrorMessage(errors, BAD_REQUEST.value());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(BAD_REQUEST)
     public ErrorMessage handleValidationException(MethodArgumentNotValidException e) {
+        log.error("Ошибка валидации", e);
         Map<String, String> errors = e.getBindingResult().getFieldErrors().stream()
                 .collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage));
-        return new ErrorMessage(errors, HttpStatus.BAD_REQUEST.value());
+        return new ErrorMessage(errors, BAD_REQUEST.value());
+    }
+
+    @ExceptionHandler(UploadFileException.class)
+    @ResponseStatus(INTERNAL_SERVER_ERROR)
+    public ErrorMessage handleUploadFileException(UploadFileException e) {
+        log.error("Ошибка при загрузке файла", e);
+        return new ErrorMessage(Map.of("error", e.getMessage()), INTERNAL_SERVER_ERROR.value());
     }
 
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    @ResponseStatus(INTERNAL_SERVER_ERROR)
     public ErrorMessage handleException(Exception e) {
-        log.error("Unhandled exception", e);
+        log.error("Произошла неизвестная ошибка", e);
         return new ErrorMessage(Map.of("error", "Internal server error"), 500);
     }
 }
