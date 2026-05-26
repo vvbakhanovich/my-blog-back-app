@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,6 +49,11 @@ public class PostController {
     public PostDto updatePost(@PathVariable long postId, @Valid @RequestBody UpdatePostDto updatedPost) {
         validateMatchingIds(postId, updatedPost);
         return postService.updatePost(postId, updatedPost);
+    }
+
+    @DeleteMapping("/{postId}")
+    public void deletePost(@PathVariable long postId) {
+        postService.deletePost(postId);
     }
 
     private void validateMatchingIds(long postId, UpdatePostDto updatedPost) {
