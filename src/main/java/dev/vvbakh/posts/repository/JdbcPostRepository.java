@@ -77,4 +77,9 @@ public class JdbcPostRepository implements PostRepository {
                 Long.class, pattern, pattern
         );
     }
+
+    @Override
+    public void delete(long postId) {
+        jdbcTemplate.update("DELETE FROM posts WHERE id = ?", postId);
+    }
 }

@@ -15,4 +15,6 @@ public interface PostRepository {
     List<Post> getAll(String search, int pageNumber, int pageSize);
 
     long countAll(String search);
+
+    void delete(long postId);
 }
