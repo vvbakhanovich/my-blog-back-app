@@ -2,6 +2,7 @@ package dev.vvbakh.posts.service;
 
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
+import dev.vvbakh.posts.dto.PostsPageDto;
 import dev.vvbakh.posts.dto.UpdatePostDto;
 import dev.vvbakh.posts.mapper.PostMapper;
 import dev.vvbakh.posts.model.Post;
@@ -113,5 +114,43 @@ class PostServiceImplTest {
         UpdatePostDto dto = new UpdatePostDto(999L, "Title", "Content", List.of());
 
         assertThrows(NotFoundException.class, () -> postService.updatePost(999L, dto));
+    }
+
+    @Test
+    @DisplayName("возвращать PostsPageDto с правильными флагами пагинации")
+    void getAll_shouldReturnPostsPageWithCorrectPaginationFlags() {
+        Post post = new Post(1L, "Java Post", "Content", 0);
+        List<String> tags = List.of("java");
+        PostDto postDto = new PostDto(1L, "Java Post", "Content", tags, 0, 0);
+
+        when(postRepository.getAll("java", 1, 2)).thenReturn(List.of(post));
+        when(postRepository.countAll("java")).thenReturn(3L);
+        when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
+        when(postMapper.toDto(post, tags)).thenReturn(postDto);
+
+        PostsPageDto result = postService.getAll("java", 1, 2);
+
+        assertEquals(1, result.posts().size());
+        assertEquals(false, result.hasPrev());
+        assertEquals(true, result.hasNext());
+        assertEquals(2L, result.lastPage());
+    }
+
+    @Test
+    @DisplayName("обрезать текст поста до 128 символов с многоточием")
+    void getAll_shouldTruncateTextLongerThan128Chars() {
+        String longText = "A".repeat(200);
+        Post post = new Post(1L, "Post", longText, 0);
+        PostDto postDto = new PostDto(1L, "Post", longText, List.of(), 0, 0);
+
+        when(postRepository.getAll("Post", 1, 10)).thenReturn(List.of(post));
+        when(postRepository.countAll("Post")).thenReturn(1L);
+        when(tagRepository.getAllByPostId(1L)).thenReturn(List.of());
+        when(postMapper.toDto(post, List.of())).thenReturn(postDto);
+
+        PostsPageDto result = postService.getAll("Post", 1, 10);
+
+        String expectedText = "A".repeat(128) + "…";
+        assertEquals(expectedText, result.posts().get(0).text());
     }
 }
