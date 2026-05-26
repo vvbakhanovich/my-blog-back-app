@@ -51,6 +51,11 @@ public class PostController {
         return postService.updatePost(postId, updatedPost);
     }
 
+    @PostMapping("/{postId}/likes")
+    public long incrementLikes(@PathVariable long postId) {
+        return postService.incrementLikes(postId);
+    }
+
     @DeleteMapping("/{postId}")
     public void deletePost(@PathVariable long postId) {
         postService.deletePost(postId);
