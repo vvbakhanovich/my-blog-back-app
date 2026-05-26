@@ -1,5 +1,6 @@
 package dev.vvbakh.tags.repository;
 
+import dev.vvbakh.posts.model.Post;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -25,6 +26,15 @@ public class JdbcTagRepository implements TagRepository {
         return jdbcTemplate.queryForList(
                 "SELECT tag FROM post_tags WHERE post_id = ?",
                 String.class, postId
+        );
+    }
+
+    @Override
+    public void updateAll(long postId, List<String> tags) {
+        jdbcTemplate.update("DELETE FROM post_tags WHERE post_id = ?", postId);
+        jdbcTemplate.batchUpdate(
+                "INSERT INTO post_tags(post_id, tag) VALUES(?, ?)",
+                tags.stream().distinct().map(tag -> new Object[]{postId, tag}).toList()
         );
     }
 }

@@ -5,7 +5,8 @@ import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
 
-public record CreatePostDto(
+public record UpdatePostDto(
+        long id,
         @NotBlank String title,
         @NotBlank String text,
         @NotNull List<String> tags) {

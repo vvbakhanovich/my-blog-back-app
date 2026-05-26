@@ -2,6 +2,7 @@ package dev.vvbakh.posts.service;
 
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
+import dev.vvbakh.posts.dto.UpdatePostDto;
 import dev.vvbakh.posts.mapper.PostMapper;
 import dev.vvbakh.posts.model.Post;
 import dev.vvbakh.posts.repository.PostRepository;
@@ -83,5 +84,34 @@ class PostServiceImplTest {
         when(postRepository.getById(999L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> postService.getById(999L));
+    }
+
+    @Test
+    @DisplayName("обновлять пост с тегами и возвращать обновлённый DTO")
+    void updatePost_shouldUpdatePostAndTagsAndReturnDto() {
+        UpdatePostDto dto = new UpdatePostDto(1L, "New Title", "New Content", List.of("tag1"));
+        Post post = new Post(1L, "New Title", "New Content", 0);
+        List<String> tags = List.of("tag1");
+        PostDto expectedDto = new PostDto(1L, "New Title", "New Content", tags, 0, 0);
+
+        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
+        when(postMapper.toModel(dto)).thenReturn(post);
+        when(tagRepository.getAllByPostId(1L)).thenReturn(tags);
+        when(postMapper.toDto(post, tags)).thenReturn(expectedDto);
+
+        PostDto result = postService.updatePost(1L, dto);
+
+        assertEquals(expectedDto, result);
+        verify(postRepository).update(post);
+        verify(tagRepository).updateAll(1L, dto.tags());
+    }
+
+    @Test
+    @DisplayName("бросать NotFoundException при обновлении несуществующего поста")
+    void updatePost_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+        when(postRepository.getById(999L)).thenReturn(Optional.empty());
+        UpdatePostDto dto = new UpdatePostDto(999L, "Title", "Content", List.of());
+
+        assertThrows(NotFoundException.class, () -> postService.updatePost(999L, dto));
     }
 }

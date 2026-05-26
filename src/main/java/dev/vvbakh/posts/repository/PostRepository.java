@@ -8,4 +8,6 @@ public interface PostRepository {
     long create(Post newPost);
 
     Optional<Post> getById(long postId);
+
+    void update(Post updated);
 }

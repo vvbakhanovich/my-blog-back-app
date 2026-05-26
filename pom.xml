@@ -21,6 +21,8 @@
     <maven-war-plugin.version>3.4.0</maven-war-plugin.version>
     <lombok.version>1.18.46</lombok.version>
     <mapstruct.version>1.6.3</mapstruct.version>
+    <jakarta.validation-api.version>3.0.2</jakarta.validation-api.version>
+    <hibernate-validator.version>8.0.1.Final</hibernate-validator.version>
   </properties>
 
   <dependencies>
@@ -34,6 +36,16 @@
       <artifactId>jakarta.servlet-api</artifactId>
       <version>${jakarta.servlet-api.version}</version>
       <scope>provided</scope>
+    </dependency>
+    <dependency>
+      <groupId>jakarta.validation</groupId>
+      <artifactId>jakarta.validation-api</artifactId>
+      <version>${jakarta.validation-api.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hibernate.validator</groupId>
+      <artifactId>hibernate-validator</artifactId>
+      <version>${hibernate-validator.version}</version>
     </dependency>
 
     <dependency>

@@ -2,6 +2,7 @@ package dev.vvbakh.posts.mapper;
 
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
+import dev.vvbakh.posts.dto.UpdatePostDto;
 import dev.vvbakh.posts.model.Post;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -21,4 +22,8 @@ public interface PostMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "likesCount", ignore = true)
     Post toModel(CreatePostDto dto);
+
+    @Mapping(source = "text", target = "content")
+    @Mapping(target = "likesCount", ignore = true)
+    Post toModel(UpdatePostDto dto);
 }

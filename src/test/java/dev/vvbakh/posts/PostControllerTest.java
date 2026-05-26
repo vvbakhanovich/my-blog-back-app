@@ -23,6 +23,7 @@ import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -86,6 +87,85 @@ class  PostControllerTest {
     void getPostById_shouldReturn404WhenPostNotFound() throws Exception {
         mockMvc.perform(get("/api/posts/{id}", Long.MAX_VALUE))
                 .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.error").exists());
+    }
+
+    @Test
+    @DisplayName("обновлять пост и возвращать обновлённый DTO по запросу PUT /api/posts/{id}")
+    void updatePost_shouldReturnUpdatedPostDto() throws Exception {
+        long id = postRepository.create(new Post(null, "Old Title", "Old Content", 0));
+        tagRepository.saveAll(id, List.of("oldTag"));
+
+        mockMvc.perform(put("/api/posts/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":%d,"title":"New Title","text":"New Content","tags":["newTag"]}
+                                """.formatted(id)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(id))
+                .andExpect(jsonPath("$.title").value("New Title"))
+                .andExpect(jsonPath("$.text").value("New Content"))
+                .andExpect(jsonPath("$.tags[0]").value("newTag"));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при обновлении несуществующего поста")
+    void updatePost_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(put("/api/posts/{id}", Long.MAX_VALUE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":%d,"title":"Title","text":"Content","tags":[]}
+                                """.formatted(Long.MAX_VALUE)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при создании поста с пустым title")
+    void createPost_shouldReturn400WhenTitleIsBlank() throws Exception {
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"","text":"Content","tags":[]}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").exists());
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при создании поста с пустым text")
+    void createPost_shouldReturn400WhenTextIsBlank() throws Exception {
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Title","text":"","tags":[]}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.text").exists());
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при создании поста без tags")
+    void createPost_shouldReturn400WhenTagsIsNull() throws Exception {
+        mockMvc.perform(post("/api/posts")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Title","text":"Content"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.tags").exists());
+    }
+
+    @Test
+    @DisplayName("возвращать 400 при обновлении поста с несовпадающим id")
+    void updatePost_shouldReturn400WhenIdNotMatch() throws Exception {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        mockMvc.perform(put("/api/posts/{id}", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"id":999,"title":"Title","text":"Content","tags":[]}
+                                """))
+                .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.error").exists());
     }
 }
