@@ -12,6 +12,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -58,5 +60,77 @@ class JdbcPostRepositoryTest {
         Post found = postRepository.getById(id).orElseThrow();
         assertEquals("New Title", found.title());
         assertEquals("New Content", found.content());
+    }
+
+    @Test
+    @DisplayName("возвращать посты, совпадающие по title")
+    void getAll_shouldReturnPostsMatchingTitle() {
+        postRepository.create(new Post(null, "Java Guide", "Some content", 0));
+        postRepository.create(new Post(null, "Spring Guide", "Other content", 0));
+
+        List<Post> result = postRepository.getAll("java", 1, 10);
+
+        assertEquals(1, result.size());
+        assertEquals("Java Guide", result.get(0).title());
+    }
+
+    @Test
+    @DisplayName("возвращать посты, совпадающие по content")
+    void getAll_shouldReturnPostsMatchingContent() {
+        postRepository.create(new Post(null, "Post One", "Content about Hibernate", 0));
+        postRepository.create(new Post(null, "Post Two", "Content about Redis", 0));
+
+        List<Post> result = postRepository.getAll("Hibernate", 1, 10);
+
+        assertEquals(1, result.size());
+        assertEquals("Post One", result.get(0).title());
+    }
+
+    @Test
+    @DisplayName("возвращать пустой список если ничего не совпало")
+    void getAll_shouldReturnEmptyListWhenNoMatch() {
+        postRepository.create(new Post(null, "Java Post", "Java content", 0));
+
+        List<Post> result = postRepository.getAll("python", 1, 10);
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("возвращать правильную страницу при пагинации")
+    void getAll_shouldReturnCorrectPage() {
+        for (int i = 1; i <= 4; i++) {
+            postRepository.create(new Post(null, "Post " + i, "Content", 0));
+        }
+
+        List<Post> page1 = postRepository.getAll("Post", 1, 2);
+        List<Post> page2 = postRepository.getAll("Post", 2, 2);
+
+        assertEquals(2, page1.size());
+        assertEquals(2, page2.size());
+        assertTrue(page1.stream().noneMatch(p -> page2.stream().anyMatch(p2 -> p2.id().equals(p.id()))));
+    }
+
+    @Test
+    @DisplayName("возвращать все посты при пустой строке поиска")
+    void getAll_shouldReturnAllPostsWhenSearchIsEmpty() {
+        postRepository.create(new Post(null, "Java Post", "Java content", 0));
+        postRepository.create(new Post(null, "Spring Post", "Spring content", 0));
+
+        List<Post> result = postRepository.getAll("", 1, 10);
+
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    @DisplayName("считать количество постов по поисковой строке")
+    void countAll_shouldReturnMatchingCount() {
+        postRepository.create(new Post(null, "Java Post", "Java content", 0));
+        postRepository.create(new Post(null, "Spring Post", "Spring content", 0));
+        postRepository.create(new Post(null, "Other Post", "Other content", 0));
+
+        long count = postRepository.countAll("java");
+
+        assertEquals(1, count);
     }
 }
