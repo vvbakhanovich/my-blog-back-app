@@ -1,7 +1,7 @@
 package dev.vvbakh.exception;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
@@ -34,6 +34,21 @@ public class GlobalExceptionHandler {
     public ErrorMessage handleIdNotMatchException(IdNotMatchException e) {
         return new ErrorMessage(Map.of("error", "Ids don't match. Path variable '" + e.getPathVariableId() +
                 "' . Post id from request body '" + e.getPostId() + "'."), HttpStatus.BAD_REQUEST.value());
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleConstraintViolationException(ConstraintViolationException e) {
+        Map<String, String> errors = e.getConstraintViolations().stream()
+                .collect(Collectors.toMap(
+                        v -> {
+                            String path = v.getPropertyPath().toString();
+                            return path.substring(path.lastIndexOf('.') + 1);
+                        },
+                        v -> v.getMessage(),
+                        (a, b) -> a
+                ));
+        return new ErrorMessage(errors, HttpStatus.BAD_REQUEST.value());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
