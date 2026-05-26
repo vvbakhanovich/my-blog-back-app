@@ -1,6 +1,11 @@
 package dev.vvbakh.posts;
 
+import dev.vvbakh.comments.dto.CommentDto;
+import dev.vvbakh.comments.dto.CreateCommentDto;
+import dev.vvbakh.comments.service.CommentsService;
 import dev.vvbakh.exception.IdNotMatchException;
+import dev.vvbakh.exception.UploadFileException;
+import dev.vvbakh.files.FileService;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.PostsPageDto;
@@ -22,6 +27,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.List;
+
 @RestController
 @RequestMapping("api/posts")
 @RequiredArgsConstructor
@@ -29,6 +37,8 @@ import org.springframework.web.multipart.MultipartFile;
 public class PostController {
 
     private final PostService postService;
+    private final CommentsService commentsService;
+    private final FileService fileService;
 
     @GetMapping
     public PostsPageDto getAllPosts(@RequestParam String search,
@@ -66,14 +76,47 @@ public class PostController {
     @PutMapping("/{postId}/image")
     public void uploadImage(@PathVariable long postId,
                             @RequestParam("image") MultipartFile image) {
-        postService.uploadImage(postId, image);
+        postService.getById(postId);
+        try {
+            fileService.saveImage(postId, image.getBytes());
+        } catch (IOException e) {
+            throw new UploadFileException(e);
+        }
     }
 
     @GetMapping(value = "/{postId}/image", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public byte[] getImage(@PathVariable long postId) {
-        return postService.getImage(postId);
+        postService.getById(postId);
+        try {
+            return fileService.getImage(postId);
+        } catch (IOException e) {
+            throw new UploadFileException(e);
+        }
     }
 
+    @PostMapping("/{postId}/comments")
+    public CommentDto addComment(@PathVariable long postId,
+                                 @Valid @RequestBody CreateCommentDto dto) {
+        return commentsService.add(postId, dto);
+    }
+
+    @GetMapping("/{postId}/comments")
+    public List<CommentDto> getComments(@PathVariable long postId) {
+        return commentsService.getAll(postId);
+    }
+
+    @PutMapping("/{postId}/comments/{commentId}")
+    public CommentDto updateComment(@PathVariable long postId,
+                                    @PathVariable long commentId,
+                                    @Valid @RequestBody CreateCommentDto dto) {
+        return commentsService.update(postId, commentId, dto);
+    }
+
+    @DeleteMapping("/{postId}/comments/{commentId}")
+    public void deleteComment(@PathVariable long postId,
+                               @PathVariable long commentId) {
+        commentsService.delete(postId, commentId);
+    }
 
     private void validateMatchingIds(long postId, UpdatePostDto updatedPost) {
         if (postId != updatedPost.id()) {
