@@ -26,6 +26,13 @@ public class GlobalExceptionHandler {
         return new ErrorMessage(Map.of("error", e.getMessage()), HttpStatus.BAD_REQUEST.value());
     }
 
+    @ExceptionHandler(IdNotMatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorMessage handleIdNotMatchException(IdNotMatchException e) {
+        return new ErrorMessage(Map.of("error", "Ids don't match. Path variable '" + e.getPathVariableId() +
+                "' . Post id from request body '" + e.getPostId() + "'."), HttpStatus.BAD_REQUEST.value());
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorMessage handleException(Exception e) {

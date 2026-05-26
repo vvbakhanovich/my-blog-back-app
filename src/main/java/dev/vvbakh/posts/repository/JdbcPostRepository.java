@@ -48,4 +48,9 @@ public class JdbcPostRepository implements PostRepository {
                 id
         ).stream().findFirst();
     }
+
+    @Override
+    public void update(Post updated) {
+        jdbcTemplate.update("UPDATE posts SET title = ?, content = ? WHERE id = ?", updated.title(), updated.content(), updated.id());
+    }
 }

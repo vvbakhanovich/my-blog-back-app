@@ -3,6 +3,7 @@ package dev.vvbakh.posts.service;
 import dev.vvbakh.exception.NotFoundException;
 import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
+import dev.vvbakh.posts.dto.UpdatePostDto;
 import dev.vvbakh.posts.mapper.PostMapper;
 import dev.vvbakh.posts.model.Post;
 import dev.vvbakh.posts.repository.PostRepository;
@@ -35,9 +36,24 @@ public class PostServiceImpl implements PostService {
     @Override
     public PostDto getById(long postId) {
         log.debug("Получение поста с id '{}'", postId);
-        Post post = postRepository.getById(postId)
-                .orElseThrow(() -> new NotFoundException("Пост с id '" + postId + "' не найден"));
-        List<String> tags = tagRepository.getAllByPostId(postId);
+        final var post = getPostOrThrow(postId);
+        final List<String> tags = tagRepository.getAllByPostId(postId);
         return postMapper.toDto(post, tags);
+    }
+
+    @Override
+    @Transactional
+    public PostDto updatePost(long postId, UpdatePostDto updatedPost) {
+        log.info("Обновление поста с идентификатором '{}'.", postId);
+        getPostOrThrow(postId);
+        final Post updated = postMapper.toModel(updatedPost);
+        postRepository.update(updated);
+        tagRepository.updateAll(postId, updatedPost.tags());
+        return getById(postId);
+    }
+
+    private Post getPostOrThrow(long postId) {
+        return postRepository.getById(postId)
+                .orElseThrow(() -> new NotFoundException("Пост с id '" + postId + "' не найден"));
     }
 }
