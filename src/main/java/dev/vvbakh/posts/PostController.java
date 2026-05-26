@@ -5,6 +5,7 @@ import dev.vvbakh.posts.dto.CreatePostDto;
 import dev.vvbakh.posts.dto.PostDto;
 import dev.vvbakh.posts.dto.UpdatePostDto;
 import dev.vvbakh.posts.service.PostService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,7 +23,7 @@ public class PostController {
     private final PostService postService;
 
     @PostMapping
-    public PostDto createPost(@RequestBody CreatePostDto createPostDto) {
+    public PostDto createPost(@Valid @RequestBody CreatePostDto createPostDto) {
         return postService.create(createPostDto);
     }
 
@@ -32,10 +33,14 @@ public class PostController {
     }
 
     @PutMapping("/{postId}")
-    public PostDto updatePost(@PathVariable long postId, @RequestBody UpdatePostDto updatedPost) {
+    public PostDto updatePost(@PathVariable long postId, @Valid @RequestBody UpdatePostDto updatedPost) {
+        validateMatchingIds(postId, updatedPost);
+        return postService.updatePost(postId, updatedPost);
+    }
+
+    private void validateMatchingIds(long postId, UpdatePostDto updatedPost) {
         if (postId != updatedPost.id()) {
             throw new IdNotMatchException(postId, updatedPost.id());
         }
-        return postService.updatePost(postId, updatedPost);
     }
 }
