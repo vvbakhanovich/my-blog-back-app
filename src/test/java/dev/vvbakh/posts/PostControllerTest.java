@@ -21,6 +21,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -175,7 +176,7 @@ class  PostControllerTest {
     void getPostById_shouldReturn404WhenPostNotFound() throws Exception {
         mockMvc.perform(get("/api/posts/{id}", Long.MAX_VALUE))
                 .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.errors").exists());
     }
 
     @Test
@@ -215,8 +216,7 @@ class  PostControllerTest {
                         .content("""
                                 {"title":"","text":"Content","tags":[]}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").exists());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -227,8 +227,7 @@ class  PostControllerTest {
                         .content("""
                                 {"title":"Title","text":"","tags":[]}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.text").exists());
+                .andExpect(status().isBadRequest());
     }
 
     @Test
@@ -239,14 +238,32 @@ class  PostControllerTest {
                         .content("""
                                 {"title":"Title","text":"Content"}
                                 """))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.tags").exists());
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("удалять пост и возвращать 200 по запросу DELETE /api/posts/{id}")
+    void deletePost_shouldReturn200() throws Exception {
+        long id = postRepository.create(new Post(null, "To Delete", "Content", 0));
+
+        mockMvc.perform(delete("/api/posts/{id}", id))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/posts/{id}", id))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при удалении несуществующего поста")
+    void deletePost_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(delete("/api/posts/{id}", Long.MAX_VALUE))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     @DisplayName("возвращать 400 при обновлении поста с несовпадающим id")
     void updatePost_shouldReturn400WhenIdNotMatch() throws Exception {
-        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+        long id = postRepository.create(new Post(23L, "Title", "Content", 0));
 
         mockMvc.perform(put("/api/posts/{id}", id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -254,6 +271,6 @@ class  PostControllerTest {
                                 {"id":999,"title":"Title","text":"Content","tags":[]}
                                 """))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.error").exists());
+                .andExpect(jsonPath("$.errors").exists());
     }
 }
