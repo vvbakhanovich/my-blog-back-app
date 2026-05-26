@@ -242,6 +242,23 @@ class  PostControllerTest {
     }
 
     @Test
+    @DisplayName("инкрементировать лайки и возвращать обновлённое значение")
+    void incrementLikes_shouldReturnUpdatedLikesCount() throws Exception {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        mockMvc.perform(post("/api/posts/{id}/likes", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value(1));
+    }
+
+    @Test
+    @DisplayName("возвращать 404 при инкременте лайков несуществующего поста")
+    void incrementLikes_shouldReturn404WhenPostNotFound() throws Exception {
+        mockMvc.perform(post("/api/posts/{id}/likes", Long.MAX_VALUE))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
     @DisplayName("удалять пост и возвращать 200 по запросу DELETE /api/posts/{id}")
     void deletePost_shouldReturn200() throws Exception {
         long id = postRepository.create(new Post(null, "To Delete", "Content", 0));

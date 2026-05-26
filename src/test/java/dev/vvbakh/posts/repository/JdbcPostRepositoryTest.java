@@ -135,6 +135,16 @@ class JdbcPostRepositoryTest {
     }
 
     @Test
+    @DisplayName("увеличивать likes_count на 1 и возвращать новое значение")
+    void incrementLikes_shouldIncrementAndReturnUpdatedCount() {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+
+        long likes = postRepository.incrementLikes(id);
+
+        assertEquals(1L, likes);
+    }
+
+    @Test
     @DisplayName("удалять пост по идентификатору")
     void delete_shouldRemovePost() {
         long id = postRepository.create(new Post(null, "To Delete", "Content", 0));
