@@ -108,6 +108,27 @@ class PostServiceImplTest {
     }
 
     @Test
+    @DisplayName("инкрементировать лайки и возвращать обновлённое значение")
+    void incrementLikes_shouldReturnUpdatedLikesCount() {
+        Post post = new Post(1L, "Title", "Content", 0);
+        when(postRepository.getById(1L)).thenReturn(Optional.of(post));
+        when(postRepository.incrementLikes(1L)).thenReturn(1L);
+
+        long result = postService.incrementLikes(1L);
+
+        assertEquals(1L, result);
+        verify(postRepository).incrementLikes(1L);
+    }
+
+    @Test
+    @DisplayName("бросать NotFoundException при инкременте лайков несуществующего поста")
+    void incrementLikes_shouldThrowNotFoundExceptionWhenPostDoesNotExist() {
+        when(postRepository.getById(999L)).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> postService.incrementLikes(999L));
+    }
+
+    @Test
     @DisplayName("удалять пост по идентификатору")
     void deletePost_shouldCallRepositoryDelete() {
         Post post = new Post(1L, "Title", "Content", 0);
