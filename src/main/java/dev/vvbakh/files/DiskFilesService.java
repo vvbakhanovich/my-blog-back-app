@@ -16,6 +16,11 @@ public class DiskFilesService implements FileService {
 
     public DiskFilesService(@Value("${files.images.dir}") String baseDir) {
         this.baseDir = Path.of(baseDir);
+        try {
+            Files.createDirectories(this.baseDir);
+        } catch (IOException e) {
+            throw new RuntimeException("Не удалось создать директорию для изображений: " + baseDir, e);
+        }
     }
 
     @Override
