@@ -34,7 +34,7 @@ public class JdbcPostRepository implements PostRepository {
         jdbcTemplate.update(con -> {
             var ps = con.prepareStatement(
                     "INSERT INTO posts(title, content) VALUES(?, ?)",
-                    Statement.RETURN_GENERATED_KEYS
+                   new String[]{"id"}
             );
             ps.setString(1, newPost.title());
             ps.setString(2, newPost.content());

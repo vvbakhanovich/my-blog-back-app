@@ -30,7 +30,7 @@ public class JdbcCommentsRepository implements CommentsRepository {
         jdbcTemplate.update(con -> {
             var ps = con.prepareStatement(
                     "INSERT INTO post_comments(content, post_id) VALUES(?, ?)",
-                    Statement.RETURN_GENERATED_KEYS
+                    new String[]{"id"}
             );
             ps.setString(1, comment.content());
             ps.setLong(2, comment.postId());
