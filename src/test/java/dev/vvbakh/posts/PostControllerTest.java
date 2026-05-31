@@ -323,6 +323,18 @@ class  PostControllerTest {
     }
 
     @Test
+    @DisplayName("возвращать 400 при загрузке файла с неверным типом")
+    void uploadImage_shouldReturn400WhenContentTypeIsNotImage() throws Exception {
+        long id = postRepository.create(new Post(null, "Title", "Content", 0));
+        MockMultipartFile file = new MockMultipartFile("image", "doc.pdf",
+                MediaType.APPLICATION_PDF_VALUE, "fake-pdf".getBytes());
+
+        mockMvc.perform(multipart(HttpMethod.PUT, "/api/posts/{id}/image", id)
+                        .file(file))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @DisplayName("возвращать 404 при загрузке картинки несуществующего поста")
     void uploadImage_shouldReturn404WhenPostNotFound() throws Exception {
         MockMultipartFile image = new MockMultipartFile("image", "img.jpg",
