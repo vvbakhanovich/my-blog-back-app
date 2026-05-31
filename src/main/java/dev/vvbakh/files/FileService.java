@@ -1,10 +1,11 @@
 package dev.vvbakh.files;
 
-import java.io.IOException;
+
+import org.springframework.web.multipart.MultipartFile;
 
 public interface FileService {
 
-    void saveImage(long postId, byte[] data) throws IOException;
+    void saveImage(long postId, MultipartFile data);
 
-    byte[] getImage(long postId) throws IOException;
+    byte[] getImage(long postId);
 }

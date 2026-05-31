@@ -1,6 +1,6 @@
 package dev.vvbakh.posts.repository;
 
-import dev.vvbakh.WebConfiguration;
+import dev.vvbakh.RepositoryTestConfiguration;
 import dev.vvbakh.posts.model.Post;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -18,8 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(SpringExtension.class)
-@WebAppConfiguration
-@ContextConfiguration(classes = WebConfiguration.class)
+@ContextConfiguration(classes = RepositoryTestConfiguration.class)
 @TestPropertySource(locations = "classpath:application-test.properties")
 @Transactional
 @DisplayName("JdbcPostRepository должен")
