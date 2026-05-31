@@ -43,7 +43,7 @@ public class PostController {
     @GetMapping
     public PostsPageDto getAllPosts(@RequestParam String search,
                                     @RequestParam(defaultValue = "1") @Min(1) int pageNumber,
-                                    @RequestParam(defaultValue = "10") @Min(0) int pageSize) {
+                                    @RequestParam(defaultValue = "10") @Min(1) int pageSize) {
         return postService.getAll(search, pageNumber, pageSize);
     }
 
@@ -77,21 +77,13 @@ public class PostController {
     public void uploadImage(@PathVariable long postId,
                             @RequestParam("image") MultipartFile image) {
         postService.getById(postId);
-        try {
-            fileService.saveImage(postId, image.getBytes());
-        } catch (IOException e) {
-            throw new UploadFileException(e);
-        }
+        fileService.saveImage(postId, image);
     }
 
     @GetMapping(value = "/{postId}/image", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public byte[] getImage(@PathVariable long postId) {
         postService.getById(postId);
-        try {
-            return fileService.getImage(postId);
-        } catch (IOException e) {
-            throw new UploadFileException(e);
-        }
+        return fileService.getImage(postId);
     }
 
     @PostMapping("/{postId}/comments")
@@ -114,7 +106,7 @@ public class PostController {
 
     @DeleteMapping("/{postId}/comments/{commentId}")
     public void deleteComment(@PathVariable long postId,
-                               @PathVariable long commentId) {
+                              @PathVariable long commentId) {
         commentsService.delete(postId, commentId);
     }
 
