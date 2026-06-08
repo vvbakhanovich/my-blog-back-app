@@ -1,26 +1,21 @@
 package dev.vvbakh.tags.repository;
 
-import dev.vvbakh.RepositoryTestConfiguration;
 import dev.vvbakh.posts.model.Post;
+import dev.vvbakh.posts.repository.JdbcPostRepository;
 import dev.vvbakh.posts.repository.PostRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = RepositoryTestConfiguration.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
-@Transactional
+@JdbcTest
+@Import({JdbcTagRepository.class, JdbcPostRepository.class})
 @DisplayName("JdbcTagRepository должен")
 class JdbcTagRepositoryTest {
 
