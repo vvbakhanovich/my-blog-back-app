@@ -6,8 +6,8 @@ import dev.vvbakh.tags.repository.TagRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +16,7 @@ import java.util.List;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -26,7 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
 @DisplayName("PostController должен")
@@ -417,7 +418,7 @@ class PostControllerTest {
                                 """))
                 .andReturn().getResponse().getContentAsString();
 
-        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+        long commentId = JsonMapper.builder().build()
                 .readTree(response).get("id").asLong();
 
         mockMvc.perform(put("/api/posts/{postId}/comments/{commentId}", postId, commentId)
@@ -452,7 +453,7 @@ class PostControllerTest {
                                 """))
                 .andReturn().getResponse().getContentAsString();
 
-        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+        long commentId = JsonMapper.builder().build()
                 .readTree(response).get("id").asLong();
 
         mockMvc.perform(delete("/api/posts/{postId}/comments/{commentId}", postId, commentId))
