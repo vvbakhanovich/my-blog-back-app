@@ -1,23 +1,16 @@
 package dev.vvbakh.posts;
 
-import dev.vvbakh.WebConfiguration;
 import dev.vvbakh.posts.model.Post;
 import dev.vvbakh.posts.repository.PostRepository;
 import dev.vvbakh.tags.repository.TagRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
@@ -33,29 +26,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@WebAppConfiguration
-@ContextConfiguration(classes = WebConfiguration.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
+@SpringBootTest
+@AutoConfigureMockMvc
 @Transactional
 @DisplayName("PostController должен")
-class  PostControllerTest {
+class PostControllerTest {
 
     @Autowired
-    private WebApplicationContext wac;
+    private MockMvc mockMvc;
 
     @Autowired
     private PostRepository postRepository;
 
     @Autowired
     private TagRepository tagRepository;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
-    }
 
     @Test
     @DisplayName("возвращать страницу постов по запросу GET /api/posts")
