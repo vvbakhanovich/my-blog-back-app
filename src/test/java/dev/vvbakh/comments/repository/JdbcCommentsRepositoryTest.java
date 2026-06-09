@@ -1,27 +1,22 @@
 package dev.vvbakh.comments.repository;
 
-import dev.vvbakh.RepositoryTestConfiguration;
 import dev.vvbakh.comments.model.Comment;
 import dev.vvbakh.posts.model.Post;
+import dev.vvbakh.posts.repository.JdbcPostRepository;
 import dev.vvbakh.posts.repository.PostRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.jdbc.test.autoconfigure.JdbcTest;
+import org.springframework.context.annotation.Import;
 
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@ExtendWith(SpringExtension.class)
-@ContextConfiguration(classes = RepositoryTestConfiguration.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
-@Transactional
+@JdbcTest
+@Import({JdbcCommentsRepository.class, JdbcPostRepository.class})
 @DisplayName("JdbcCommentsRepository должен")
 class JdbcCommentsRepositoryTest {
 
