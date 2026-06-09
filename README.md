@@ -5,10 +5,59 @@
 ## Стек
 
 - **Java** 21
-- **Spring Framework** 6.1+
-- Сервлет-контейнер: Tomcat 
-- Сборка: Maven
-- БД: PostgreSQL, H2 (in-memory)
+- **Spring Boot** 4.0
+- Сервлет-контейнер: встроенный Tomcat (Executable JAR)
+- Сборка: Gradle
+- БД: PostgreSQL (прод), H2 in-memory (тесты)
+
+## Сборка и запуск
+
+### Требования
+
+- JDK 21+
+- PostgreSQL (для запуска приложения)
+
+### Сборка
+
+```bash
+./gradlew build
+```
+
+Собранный JAR появится в `build/libs/my-blog-back-app-1.0-SNAPSHOT.jar`.
+
+### Запуск тестов
+
+```bash
+./gradlew test
+```
+
+Тесты используют H2 in-memory — PostgreSQL не нужен.
+
+### Запуск приложения
+
+```bash
+./gradlew bootRun
+```
+
+Или напрямую через JAR:
+
+```bash
+java -jar build/libs/my-blog-back-app-1.0-SNAPSHOT.jar
+```
+
+По умолчанию приложение стартует на `http://localhost:8080`.
+
+Настройки подключения к БД задаются в `src/main/resources/application.yaml`:
+
+```yaml
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/blog
+    username: postgres
+    password: postgres
+```
+
+Схема БД накатывается автоматически при старте (`schema.sql`).
 
 ## REST API
 

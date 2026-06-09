@@ -1,28 +1,22 @@
 package dev.vvbakh.posts;
 
-import dev.vvbakh.WebConfiguration;
 import dev.vvbakh.posts.model.Post;
 import dev.vvbakh.posts.repository.PostRepository;
 import dev.vvbakh.tags.repository.TagRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.List;
 
 import org.springframework.http.HttpMethod;
 import org.springframework.mock.web.MockMultipartFile;
+import tools.jackson.databind.json.JsonMapper;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -33,29 +27,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(SpringExtension.class)
-@WebAppConfiguration
-@ContextConfiguration(classes = WebConfiguration.class)
-@TestPropertySource(locations = "classpath:application-test.properties")
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@AutoConfigureMockMvc
 @Transactional
 @DisplayName("PostController должен")
-class  PostControllerTest {
+class PostControllerTest {
 
     @Autowired
-    private WebApplicationContext wac;
+    private MockMvc mockMvc;
 
     @Autowired
     private PostRepository postRepository;
 
     @Autowired
     private TagRepository tagRepository;
-
-    private MockMvc mockMvc;
-
-    @BeforeEach
-    void setup() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(wac).build();
-    }
 
     @Test
     @DisplayName("возвращать страницу постов по запросу GET /api/posts")
@@ -433,7 +418,7 @@ class  PostControllerTest {
                                 """))
                 .andReturn().getResponse().getContentAsString();
 
-        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+        long commentId = JsonMapper.builder().build()
                 .readTree(response).get("id").asLong();
 
         mockMvc.perform(put("/api/posts/{postId}/comments/{commentId}", postId, commentId)
@@ -468,7 +453,7 @@ class  PostControllerTest {
                                 """))
                 .andReturn().getResponse().getContentAsString();
 
-        long commentId = com.fasterxml.jackson.databind.json.JsonMapper.builder().build()
+        long commentId = JsonMapper.builder().build()
                 .readTree(response).get("id").asLong();
 
         mockMvc.perform(delete("/api/posts/{postId}/comments/{commentId}", postId, commentId))
